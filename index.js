@@ -45,7 +45,7 @@ const scrape = async (name) => {
 		return Array.from(cardElements).map((card) => {
 			const title = card.querySelector('.c-cardText__title').innerText;
 			const date = card.querySelector('time').innerText;
-			const body = card.querySelector('.c-cardText__body').innerText;
+			const body = card.querySelector('.c-cardText__body > p').innerText;
 			return {
 				title,
 				date,
