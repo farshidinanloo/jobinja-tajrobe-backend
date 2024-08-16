@@ -1,14 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import puppeteer from 'puppeteer';
-import fs from 'fs';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.listen(3000, () => {
-	console.log('Listening on port 3000!');
+	console.log('Listening on port 3000');
 });
 
 app.get('/company', async (req, res) => {
@@ -19,7 +20,9 @@ app.get('/company', async (req, res) => {
 });
 
 const scrape = async (name) => {
-	const browser = await puppeteer.launch();
+	const browser = await puppeteer.connect({
+		browserWSEndpoint: `wss://jobinja-tajrobe-2-bjqqunyqt.liara.run?token=${process.env.LIARA_API_KEY}`,
+	});
 	const page = await browser.newPage();
 
 	const url = 'https://tajrobe.github.io/search';
@@ -51,8 +54,6 @@ const scrape = async (name) => {
 		});
 	});
 	console.log(data);
-	fs.writeFileSync('data.json', JSON.stringify(data, null, 2));
 	await browser.close();
 	return data;
 };
-
