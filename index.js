@@ -1,8 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import puppeteer from 'puppeteer';
+import NodeCache from 'node-cache';
 import dotenv from 'dotenv';
+
 dotenv.config();
+const cache = new NodeCache({ stdTTL: 1 * 24 * 60 * 60 });
 
 const app = express();
 app.use(cors());
@@ -14,8 +17,13 @@ app.listen(3000, () => {
 
 app.get('/company', async (req, res) => {
 	const { name } = req.query;
-	const data = await scrape(name);
+	if(cache.has(name)) {
+		res.json(cache.get(name));
+		return;
+	}
 
+	const data = await scrape(name);
+	cache.set(name, data);
 	res.json(data);
 });
 
