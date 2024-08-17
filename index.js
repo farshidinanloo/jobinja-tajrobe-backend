@@ -17,14 +17,18 @@ app.listen(3000, () => {
 
 app.get('/company', async (req, res) => {
 	const { name } = req.query;
-	if(cache.has(name)) {
+	if (cache.has(name)) {
 		res.json(cache.get(name));
 		return;
 	}
 
-	const data = await scrape(name);
-	cache.set(name, data);
-	res.json(data);
+	try {
+		const data = await scrape(name);
+		cache.set(name, data);
+		res.json(data);
+	} catch (error) {
+		console.log(error);
+	}
 });
 
 const scrape = async (name) => {
@@ -42,13 +46,18 @@ const scrape = async (name) => {
 	await page.type('.hero-search input', name);
 	await page.keyboard.press('Enter');
 
-	await page.waitForSelector('a.black-link', {
-		timeout: 100000,
-	});
-	await page.click('a.black-link');
-	await page.waitForSelector('.c-cardText.o-box', {
-		timeout: 100000,
-	});
+	try {
+		await page.waitForSelector('a.black-link', {
+			timeout: 10_000,
+		});
+		await page.click('a.black-link', {});
+		await page.waitForSelector('.c-cardText.o-box', {
+			timeout: 10_000,
+		});
+	} catch (error) {
+		await browser.close();
+		return [];
+	}
 
 	const data = await page.evaluate(() => {
 		const cardElements = document.querySelectorAll('.c-cardText.o-box');
@@ -79,8 +88,8 @@ const scrape = async (name) => {
 			};
 		});
 	});
-	console.log(data);
+	// console.log(data);
 
 	await browser.close();
-	return data.slice(2);
+	return data?.length ? data.slice(2) : [];
 };
